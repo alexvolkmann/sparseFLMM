@@ -784,9 +784,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                              mp = mp,
                                              para_estim = para_estim_cov,
                                              para_estim_nc = para_estim_cov_nc,
-                                             use_RI = use_RI,
                                              weights = NULL,
-                                             use_simple = use_simple,
                                              np = np,
                                              use_discrete = use_discrete_cov))
 

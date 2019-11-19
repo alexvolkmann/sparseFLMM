@@ -6,8 +6,6 @@
 # constraint for the nested model. Gives out auto-covariances evaluated on a pre-specified grid.
 ##################################################################################################################
 estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
-                                             use_RI = FALSE,
-                                             use_simple = FALSE,
                                              bf,
                                              method = "REML",
                                              d_grid = 100,
@@ -54,73 +52,32 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
       cl_estim <- NULL
     }
 
-    if(!use_RI){
-      ##################
-      # for nested fRIs
-      if(use_discrete){
-        time_cov_estim <-
-          system.time(gam1 <- try(bam(cross_vec_bivariate ~ - 1 +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
-                                          bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
-                                          bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
-                                          bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        same_point, method = method, data = index_upperTri,
-                                      discrete = TRUE, nthreads = para_estim_nc, weights = weights)))
-      }else{
-        time_cov_estim <-
-          system.time(gam1 <- try(bam(cross_vec_bivariate ~ - 1 +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
-                                          bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
-                                          bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
-                                          bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        same_point, method = method, data = index_upperTri,
-                                      cluster = cl_estim, weights = weights)))
-      }
+    ##################
+    # for nested fRIs
+    if(use_discrete){
+      time_cov_estim <-
+        system.time(gam1 <- try(bam(cross_vec_bivariate ~ - 1 +
+                                      s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
+                                        bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                      s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
+                                        bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                      s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
+                                        bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                      same_point, method = method, data = index_upperTri,
+                                    discrete = TRUE, nthreads = para_estim_nc, weights = weights)))
     }else{
-      if(!use_simple){
-        #############
-        # for one fRI
-        if(use_discrete){
-          time_cov_estim <-
-            system.time(gam1 <- try(bam(cross_vec_bivariate ~ 1 +
-                                          s(row_t_bivariate, col_t_bivariate, k = bf[1], bs = "symm", m = m[[1]],
-                                            xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                          s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[2],
-                                            bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                          same_point, method = method, data = index_upperTri,
-                                        discrete = TRUE, nthreads = para_estim_nc, weights = weights)))
-        }else{
-          time_cov_estim <-
-            system.time(gam1 <- try(bam(cross_vec_bivariate ~ 1 +
-                                          s(row_t_bivariate, col_t_bivariate, k = bf[1], bs = "symm", m = m[[1]],
-                                            xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                          s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[2],
-                                            bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                          same_point, method = method, data = index_upperTri, cluster = cl_estim, weights = weights)))
-        }
-      }else{
-        ########################
-        # for independent curves
-        if(use_discrete){
-          time_cov_estim <-
-            system.time(gam1 <- try(bam(cross_vec_bivariate ~ 1 +
-                                          s(row_t_bivariate, col_t_bivariate, k = bf[1], bs = "symm", m = m[[1]],
-                                            xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                          same_point, method = method, data = index_upperTri,
-                                        discrete = TRUE, nthreads = para_estim_nc, weights = weights)))
-        }else{
-          time_cov_estim <-
-            system.time(gam1 <- try(bam(cross_vec_bivariate ~ 1 +
-                                          s(row_t_bivariate, col_t_bivariate, k = bf[1], bs = "symm", m = m[[1]],
-                                            xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                          same_point, method = method, data = index_upperTri, cluster = cl_estim, weights = weights)))
-        }
-      }
+      time_cov_estim <-
+        system.time(gam1 <- try(bam(cross_vec_bivariate ~ - 1 +
+                                      s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
+                                        bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                      s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
+                                        bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                      s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
+                                        bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                      same_point, method = method, data = index_upperTri,
+                                    cluster = cl_estim, weights = weights)))
     }
+
 
     ##########################
     # stop cluster if existing
@@ -132,37 +89,18 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
     # using gam
     #######################
 
-    if(!use_RI){
-      ##################
-      # for crossed fRIs
-      time_cov_estim <-
-        system.time(gam1 <- try(gam(cross_vec_bivariate ~ - 1 +
-                                      s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
-                                        bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                      s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
-                                        bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                      s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
-                                        bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                      same_point, method = method, data = index_upperTri, weights = weights)))
-    }else{
-      if(!use_simple){
-        #############
-        # for one fRI
-        time_cov_estim <-
-          system.time(gam1 <- try(gam(cross_vec_bivariate ~ 1 +
-                                        s(row_t_bivariate, col_t_bivariate, k = bf[1], bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[2],
-                                          bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        same_point, method = method, data = index_upperTri, weights = weights)))
-      }else{
-        ########################
-        # for independent curves
-        time_cov_estim <-
-          system.time(gam1 <- try(gam(cross_vec_bivariate ~ 1 +
-                                        s(row_t_bivariate, col_t_bivariate, k = bf[1], bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                        same_point, method = method, data = index_upperTri, weights = weights)))
-      }
-    }
+    ##################
+    # for nested fRIs
+    time_cov_estim <-
+      system.time(gam1 <- try(gam(cross_vec_bivariate ~ - 1 +
+                                    s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
+                                      bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                    s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
+                                      bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                    s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
+                                      bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
+                                    same_point, method = method, data = index_upperTri, weights = weights)))
+
   }
 
 
@@ -196,37 +134,21 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
     # evaluation on grid
     ##########################
 
-    if(!use_RI){
-      ##################
-      # for crossed fRIs
-      grid_data <- data.table(row_t_bivariate = grid_row, col_t_bivariate = grid_col, same_subject = same_subject_grid,
-                              same_word = same_word_grid, same_curve = same_curve_grid, same_point = same_point_grid)
+    ##################
+    # for crossed fRIs
+    grid_data <- data.table(row_t_bivariate = grid_row, col_t_bivariate = grid_col, same_subject = same_subject_grid,
+                            same_word = same_word_grid, same_curve = same_curve_grid, same_point = same_point_grid)
 
-      ##########################
-      # remove unnecessary stuff
-      ##########################
-      grid_row <- NULL
-      grid_col <- NULL
-      same_subject_grid <- NULL
-      same_word_grid <- NULL
-      same_curve_grid <- NULL
-      same_point_grid <- NULL
+    ##########################
+    # remove unnecessary stuff
+    ##########################
+    grid_row <- NULL
+    grid_col <- NULL
+    same_subject_grid <- NULL
+    same_word_grid <- NULL
+    same_curve_grid <- NULL
+    same_point_grid <- NULL
 
-    }else{
-      ###################################
-      # for one fRI or independent curves
-      grid_data <- data.table(row_t_bivariate = grid_row, col_t_bivariate = grid_col, same_subject = same_subject_grid,
-                              same_curve = same_curve_grid, same_point = same_point_grid)
-
-      ##########################
-      # remove unnecessary stuff
-      ##########################
-      grid_row <- NULL
-      grid_col <- NULL
-      same_subject_grid <- NULL
-      same_curve_grid <- NULL
-      same_point_grid <- NULL
-    }
 
     ####################
     # evaluation on grid
@@ -238,45 +160,23 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
     #####################
     # extract covariances
     #####################
-    if(!use_RI){
-      ##################
-      # for crossed fRIs
-      grid_mat_B <- matrix(NA, nrow = d_grid, ncol = d_grid)
-      grid_mat_B[lower.tri(grid_mat_B, diag = TRUE)] <- grid_smooth[, 2]
-      grid_mat_B <- t(grid_mat_B)
-      grid_mat_B[lower.tri(grid_mat_B, diag = TRUE)] <- grid_smooth[, 2]
+    ##################
+    # for nested fRIs
+    grid_mat_B <- matrix(NA, nrow = d_grid, ncol = d_grid)
+    grid_mat_B[lower.tri(grid_mat_B, diag = TRUE)] <- grid_smooth[, 2]
+    grid_mat_B <- t(grid_mat_B)
+    grid_mat_B[lower.tri(grid_mat_B, diag = TRUE)] <- grid_smooth[, 2]
 
-      grid_mat_C <- matrix(NA, nrow = d_grid, ncol = d_grid)
-      grid_mat_C[lower.tri(grid_mat_C, diag = TRUE)] <- grid_smooth[, 3]
-      grid_mat_C <- t(grid_mat_C)
-      grid_mat_C[lower.tri(grid_mat_C, diag = TRUE)] <- grid_smooth[, 3]
+    grid_mat_C <- matrix(NA, nrow = d_grid, ncol = d_grid)
+    grid_mat_C[lower.tri(grid_mat_C, diag = TRUE)] <- grid_smooth[, 3]
+    grid_mat_C <- t(grid_mat_C)
+    grid_mat_C[lower.tri(grid_mat_C, diag = TRUE)] <- grid_smooth[, 3]
 
-      grid_mat_E <- matrix(NA, nrow = d_grid, ncol = d_grid)
-      grid_mat_E[lower.tri(grid_mat_E, diag = TRUE)] <- grid_smooth[, 4]
-      grid_mat_E <- t(grid_mat_E)
-      grid_mat_E[lower.tri(grid_mat_E, diag = TRUE)] <- grid_smooth[, 4]
+    grid_mat_E <- matrix(NA, nrow = d_grid, ncol = d_grid)
+    grid_mat_E[lower.tri(grid_mat_E, diag = TRUE)] <- grid_smooth[, 4]
+    grid_mat_E <- t(grid_mat_E)
+    grid_mat_E[lower.tri(grid_mat_E, diag = TRUE)] <- grid_smooth[, 4]
 
-    }else{
-      ###################################
-      # for one fRI or independent curves
-      grid_mat_B <- matrix(NA, nrow = d_grid, ncol = d_grid)
-      grid_mat_B[lower.tri(grid_mat_B, diag = TRUE)] <- grid_smooth[, 2] + intercept
-      grid_mat_B <- t(grid_mat_B)
-      grid_mat_B[lower.tri(grid_mat_B, diag = TRUE)] <- grid_smooth[, 2] + intercept
-
-      grid_mat_C <- matrix(rep(0, length = d_grid^2), ncol = d_grid, nrow = d_grid, byrow = TRUE)
-
-      if(!use_simple){
-        #############
-        # for one fRI
-        grid_mat_E <- matrix(NA, nrow = d_grid, ncol = d_grid)
-        grid_mat_E[lower.tri(grid_mat_E, diag = TRUE)] <- grid_smooth[, 3]
-        grid_mat_E <- t(grid_mat_E)
-        grid_mat_E[lower.tri(grid_mat_E, diag = TRUE)] <- grid_smooth[, 3]
-      }else{
-        grid_mat_E <- matrix(rep(0, length = d_grid^2), ncol = d_grid, nrow = d_grid, byrow = TRUE)
-      }
-    }
     grid_smooth <- NULL
     grid_data <- NULL
 
