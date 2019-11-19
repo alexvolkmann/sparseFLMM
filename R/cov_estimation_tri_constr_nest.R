@@ -26,6 +26,12 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
                                              np = TRUE,
                                              use_discrete = TRUE){
 
+  #---------------------------
+  # create new variable that is a multiplication of the indices, giving a
+  # nested model structure
+  index_upperTri[, nested := same_subject*same_word]
+
+
   if(use_bam == TRUE){
     #######################
     # covariance estimation
@@ -52,6 +58,7 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
       cl_estim <- NULL
     }
 
+
     ##################
     # for nested fRIs
     if(use_discrete){
@@ -59,7 +66,7 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
         system.time(gam1 <- try(bam(cross_vec_bivariate ~ - 1 +
                                       s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
                                         bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                      s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
+                                      s(row_t_bivariate, col_t_bivariate, by = nested, k = bf[2],
                                         bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
                                       s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
                                         bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
@@ -70,7 +77,7 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
         system.time(gam1 <- try(bam(cross_vec_bivariate ~ - 1 +
                                       s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
                                         bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                      s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
+                                      s(row_t_bivariate, col_t_bivariate, by = nested, k = bf[2],
                                         bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
                                       s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
                                         bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
@@ -95,7 +102,7 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
       system.time(gam1 <- try(gam(cross_vec_bivariate ~ - 1 +
                                     s(row_t_bivariate, col_t_bivariate, by = same_subject, k = bf[1],
                                       bs = "symm", m = m[[1]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
-                                    s(row_t_bivariate, col_t_bivariate, by = same_word, k = bf[2],
+                                    s(row_t_bivariate, col_t_bivariate, by = nested, k = bf[2],
                                       bs = "symm", m = m[[2]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
                                     s(row_t_bivariate, col_t_bivariate, by = same_curve, k = bf[3],
                                       bs = "symm", m = m[[3]], xt = list(bsmargin = "ps", kroneckersum = mp, np = np)) +
@@ -111,12 +118,10 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
     ##############################
     sp <- gam1$sp
 
-    if(use_RI){
-      ###################
-      # extract intercept
-      ###################
-      intercept <- as.numeric(coefficients(gam1)[1])
-    }
+    ###################
+    # extract intercept
+    ###################
+    intercept <- as.numeric(coefficients(gam1)[1])
 
     #################
     # extract sigmasq
@@ -135,9 +140,10 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
     ##########################
 
     ##################
-    # for crossed fRIs
+    # for nested fRIs
     grid_data <- data.table(row_t_bivariate = grid_row, col_t_bivariate = grid_col, same_subject = same_subject_grid,
                             same_word = same_word_grid, same_curve = same_curve_grid, same_point = same_point_grid)
+    grid_data[, nested := same_word*same_subject]
 
     ##########################
     # remove unnecessary stuff
