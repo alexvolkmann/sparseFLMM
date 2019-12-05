@@ -2,7 +2,7 @@ Package: sparseFLMM
 Type: Package
 Title: Functional Linear Mixed Models for Irregularly or Sparsely
         Sampled Data
-Version: 0.3.0.9000
+Version: 0.3.0.9001
 Author: Jona Cederbaum
 Maintainer: Jona Cederbaum <Jona.Cederbaum@gmail.com>
 Description: Estimation of functional linear mixed models for irregularly or
