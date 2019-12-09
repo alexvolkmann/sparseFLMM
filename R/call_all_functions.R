@@ -911,7 +911,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                          var_level = var_level, N_B = N_B, N_C = N_C, N_E = N_E,
                                          curve_info = curve_info, I = I, J = J, n = n,
                                          sigmasq_hat = res[["cov_hat_tri_constr"]][["sigmasq"]],
-                                         use_RI = use_RI))
+                                         use_RI = use_RI,
+                                         nested = nested))
       }else{
         res[["fpc_hat_tri_constr"]] <- NA
       }
