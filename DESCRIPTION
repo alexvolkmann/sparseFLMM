@@ -3,7 +3,7 @@ Type: Package
 Title: Functional Linear Mixed Models for Irregularly or Sparsely
         Sampled Data
 Version: 0.3.0.9002
-Author: Jona Cederbaum
+Author: Jona Cederbaum[aut, cre], Alexander Volkmann [aut]
 Maintainer: Jona Cederbaum <Jona.Cederbaum@gmail.com>
 Description: Estimation of functional linear mixed models for irregularly or
     sparsely sampled data based on functional principal component analysis.
