@@ -26,6 +26,9 @@ estimate_cov_tri_constr_nest_fun <- function(index_upperTri,
                                              np = TRUE,
                                              use_discrete = TRUE){
 
+  # local binding of nested because of data.table
+  nested <- NULL
+
   #---------------------------
   # create new variable that is a multiplication of the indices, giving a
   # nested model structure
