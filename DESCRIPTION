@@ -21,6 +21,7 @@ Collate: 'call_all_functions.R' 'cov_estimation_tri.R'
         'get_cross_products.R' 'mean_estimation.R'
         'tri_constraint_constructor.R' 'useful_functions.R' 'zzz.R'
 RoxygenNote: 7.1.1
+Encoding: UTF-8
 NeedsCompilation: no
 Packaged: 2020-09-11 11:11:30 UTC; Jona
 Repository: CRAN

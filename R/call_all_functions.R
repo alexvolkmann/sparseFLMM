@@ -377,7 +377,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                use_bam = TRUE, bs = "ps", d_grid = 100, min_grid = 0,
                                max_grid = 1, my_grid = NULL, bf_mean = 8,
                                bf_covariates = 8, m_mean = c(2,3), covariate = FALSE,
-                               num_covariates = 0, covariate_form = NA, interaction = FALSE,
+                               num_covariates, covariate_form, interaction,
                                which_interaction = matrix(NA),
                                save_model_mean = FALSE, para_estim_mean = FALSE, para_estim_mean_nc = 0,
                                bf_covs, m_covs, use_whole = FALSE, use_tri = FALSE, use_tri_constr = TRUE,
