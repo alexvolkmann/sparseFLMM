@@ -2,7 +2,7 @@
 % Please edit documentation in R/tri_constraint_constructor.R
 \name{Predict.matrix.symm.smooth}
 \alias{Predict.matrix.symm.smooth}
-\title{Predict matrix method for symmetric bivariate smooths.}
+\title{Predict matrix method for (skew-)symmetric bivariate smooths.}
 \usage{
 \method{Predict.matrix}{symm.smooth}(object, data)
 }
@@ -13,7 +13,7 @@ see \code{\link[mgcv]{smooth.construct}}.}
 \item{data}{see \code{\link[mgcv]{smooth.construct}}.}
 }
 \description{
-Predict matrix method for symmetric bivariate smooths.
+Predict matrix method for (skew-)symmetric bivariate smooths.
 }
 \seealso{
 \code{\link[mgcv]{Predict.matrix}} and \code{\link[mgcv]{smoothCon}} for details on constructors.
