@@ -9,15 +9,15 @@ make_summation_matrix(F, skew = FALSE, cyclic.degree = 0)
 \arguments{
 \item{F}{number of marginal basis functions.}
 
-\item{skew}{logical, should the basis be constraint to skew-symmetry instead 
+\item{skew}{logical, should the basis be constraint to skew-symmetry instead
 of symmetry.}
 
 \item{cyclic.degree}{integer, specifying the number of basis functions identified
-with each other at the boundaries in order to implement periodicity. Should 
+with each other at the boundaries in order to implement periodicity. Should
 be specified to match the degree of the utilized B-spline basis.}
 }
 \value{
-A basis transformation matrix of dimension \eqn{F^2 \times G} with 
+A basis transformation matrix of dimension \eqn{F^2 \times G} with
 \eqn{G<F^2} depending on the specified constraint.
 }
 \description{
@@ -39,4 +39,7 @@ Submitted on arXiv.
 }
 \seealso{
 \code{\link[mgcv]{smooth.construct}} and \code{\link[mgcv]{smoothCon}} for details on constructors
+}
+\author{
+Jona Cederbaum, Almond Stoecker
 }

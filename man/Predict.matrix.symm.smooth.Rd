@@ -18,3 +18,6 @@ Predict matrix method for (skew-)symmetric bivariate smooths.
 \seealso{
 \code{\link[mgcv]{Predict.matrix}} and \code{\link[mgcv]{smoothCon}} for details on constructors.
 }
+\author{
+Jona Cederbaum, Almond Stoecker
+}

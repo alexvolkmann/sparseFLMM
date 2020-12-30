@@ -22,21 +22,21 @@ An object of class "symm.smooth". See \code{\link[mgcv]{smooth.construct}} for t
 The \code{symm} class is a smooth class that is appropriate for symmetric bivariate smooths, e.g. of covariance functions,
 using tensor-product smooths in a \code{gam} formula. A constraint matrix is constructed
 (see \code{\link[sparseFLMM]{make_summation_matrix}}) to impose
-a (skew-)symmetry constraint on the (cyclic) spline coefficients, 
+a (skew-)symmetry constraint on the (cyclic) spline coefficients,
 which considerably reduces the number of coefficients that have to be estimated.
 }
 \details{
-By default a symmetric bivariate B-spline smooth \eqn{g} is specified, 
-in the sense that \eqn{g(s, t) = g(t, s)}. By setting 
-\code{s(..., bs = "symm", xt = list(skew = TRUE))}, a skew-symmetric (or anti-smmetric) 
-smooth with \eqn{g(s, t) = -g(t, s)} can be specified instead. 
-In both cases, the smooth can also be constraint to be cyclic 
+By default a symmetric bivariate B-spline smooth \eqn{g} is specified,
+in the sense that \eqn{g(s, t) = g(t, s)}. By setting
+\code{s(..., bs = "symm", xt = list(skew = TRUE))}, a skew-symmetric (or anti-smmetric)
+smooth with \eqn{g(s, t) = -g(t, s)} can be specified instead.
+In both cases, the smooth can also be constraint to be cyclic
 with the property \eqn{g(s, t) = g(s + c, t) = g(s, t + c)}
 for some fixed constant \eqn{c} via specifying \code{xt = list(cyclic = TRUE)}.
 Note that this does not correspond to specifying a tensor-product smooth from
 cyclic marginal B-splines as given by the \code{cp}-smooth.
 In the cyclic case, it is recommended to explicitly specify the range of the domain
-of the smooth via the \code{knots} argument, as this determines the period and 
+of the smooth via the \code{knots} argument, as this determines the period and
 often deviates from the observed range.
 
 The underlying procedure is the following: First, the marginal spline design matrices and the corresponding
@@ -162,4 +162,7 @@ Submitted on arXiv.
 }
 \seealso{
 \code{\link[mgcv]{smooth.construct}} and \code{\link[mgcv]{smoothCon}} for details on constructors
+}
+\author{
+Jona Cederbaum, Almond Stoecker
 }
