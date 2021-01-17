@@ -5,7 +5,8 @@ Title: Functional Linear Mixed Models for Irregularly or Sparsely
 Version: 0.4.0
 Authors@R: c(person("Jona", "Cederbaum", email = "Jona.Cederbaum@gmail.com",
                   role = c("aut", "cre")), 
-                  person("Alexander", "Volkmann", role = c("aut")))
+                  person("Alexander", "Volkmann", role = c("aut")), 
+                  person("Almond", "Stöcker", role = c("aut")))
 Maintainer: Jona Cederbaum <Jona.Cederbaum@gmail.com>
 Description: Estimation of functional linear mixed models for irregularly or
     sparsely sampled data based on functional principal component analysis.
