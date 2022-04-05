@@ -4,62 +4,62 @@
 # description: FPCA-FAMM which predicts FPC weights and B, C, E and re-estimates the mean function
 # including covariates as functional additive mixed model.
 ##################################################################################################
-estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat_grid, phi_E_hat_grid, 
-                                  nu_B_hat, nu_C_hat, nu_E_hat, t, N_B, N_C, N_E, use_bam_famm, 
-                                  num_covariates, interaction, which_interaction, n, use_RI, 
-                                  method, bs_y_famm, bs_int_famm, sigmasq, covariate, para_estim_famm, 
+estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat_grid, phi_E_hat_grid,
+                                  nu_B_hat, nu_C_hat, nu_E_hat, t, N_B, N_C, N_E, use_bam_famm,
+                                  num_covariates, interaction, which_interaction, n, use_RI,
+                                  method, bs_y_famm, bs_int_famm, sigmasq, covariate, para_estim_famm,
                                   para_estim_famm_nc, covariate_form, save_model_famm,
-                                  use_discrete){
-  
+                                  use_discrete, sp_refit){
+
   ###################
   # initialize output
   ###################
-  results <- list() 
-  
+  results <- list()
+
   ######################
   # extract curve values
   ######################
   y_vec <- curve_info$y_vec
-  
+
   ##########################
-  # construct data and ydata 
+  # construct data and ydata
   # for function pffr
   ##########################
   if(!use_RI){
-    data <- data.table(id_subject = as.factor(curve_info$subject_long), 
-                       id_word = as.factor(curve_info$word_long), 
+    data <- data.table(id_subject = as.factor(curve_info$subject_long),
+                       id_word = as.factor(curve_info$word_long),
                        id_n = as.factor(curve_info$n_long))
   }else{
-    data <- data.table(id_subject = as.factor(curve_info$subject_long), 
+    data <- data.table(id_subject = as.factor(curve_info$subject_long),
                        id_n = as.factor(curve_info$n_long))
   }
-  
+
   if(covariate){
     for(i in 1:num_covariates){
-      data[, paste0("covariate.", i) := curve_info[[paste0("covariate.", i)]]]      
+      data[, paste0("covariate.", i) := curve_info[[paste0("covariate.", i)]]]
       if(interaction){
         for(k in 1:num_covariates){
           if(which_interaction[i, k] & (i < k)){
             prod_help <- curve_info[[paste0("covariate.", i)]] * curve_info[[paste0("covariate.", k)]]
-            data[, paste0("inter_", i, "_", k) := prod_help]              
+            data[, paste0("inter_", i, "_", k) := prod_help]
           }
-        }  
+        }
       }
     }
   }
-  
-  
+
+
   data <- data[!duplicated(data$id_n), ]  # only need one row per curve not per observation in data
   ydata <- data.frame(.obs = curve_info$n_long, .index = t, .value = y_vec)
   rownames(data) <- 1:n
-  
+
   ################
   # construct pcre
   # terms for famm
   ################
   names <- vector()
   N_vec <- c(N_B, N_C, N_E)
-  
+
   if(!is.null(N_vec)){
     funs_names <- c("_B", "_C", "_E")
     for(i in seq_along(funs_names)){
@@ -73,30 +73,30 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
         id <- "id_n"
       }
       if(N_vec[i] > 0){
-        names <- cbind(names, paste("pcre(id = ", id, ", efunctions = phi", funs_names[i], 
-                                    "_hat_grid, evalues = nu", funs_names[i], "_hat, yind = my_grid)", 
+        names <- cbind(names, paste("pcre(id = ", id, ", efunctions = phi", funs_names[i],
+                                    "_hat_grid, evalues = nu", funs_names[i], "_hat, yind = my_grid)",
                                     sep = ""))
       }
     }
     listofbys_pc <- c(as.vector(names))
-    
+
     if(covariate){
       names <- vector()
-      
+
       for(i in 1:num_covariates){
         if(covariate_form[i] == "by"){
           name_help <- paste("covariate.", i, "", sep = "")
         }
         if(covariate_form[i] == "smooth"){
           if(all(data[[paste0("covariate.", i)]] %in% c(0, 1))){
-            stop("no smooth effects for dummy covariates allowed,  
+            stop("no smooth effects for dummy covariates allowed,
                please use covariate_form = 'by' for dummy covariates")
           }
           name_help <- paste0("s(covariate.", i, ")")
         }
         names <- cbind(names, name_help)
       }
-      
+
       if(interaction == FALSE){
         listofbys_cov <- as.vector(names)
       }else{
@@ -118,14 +118,14 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
         }
         listofbys_cov <- c(as.vector(names), c(inter_names))
       }
-      
+
       listofbys <- c(listofbys_pc, listofbys_cov)
     }else{
       listofbys <- listofbys_pc
     }
-    
+
     pred <- as.formula(paste("y_vec ~ 1 + ", paste(listofbys, collapse = " + "), sep = ""))
-    
+
     ####################################
     # get design matrices to get S.scale
     ####################################
@@ -134,72 +134,87 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       # FPC famm estimation/
       # prediction using bam
       #######################
-      famm_setup_get_scale <- pffr(pred, yind = my_grid, data = data, ydata = ydata, 
-                                   algorithm = "bam", control = gam.control(trace = TRUE), 
-                                   method = method, bs.yindex = bs_y_famm, 
+      famm_setup_get_scale <- pffr(pred, yind = my_grid, data = data, ydata = ydata,
+                                   algorithm = "bam", control = gam.control(trace = TRUE),
+                                   method = method, bs.yindex = bs_y_famm,
                                    bs.int = bs_int_famm, fit = FALSE)
     }else{
       #######################
       # FPC famm estimation/
       # prediction using gam
       #######################
-      famm_setup_get_scale <- pffr(pred, yind = my_grid, data = data, ydata = ydata, 
-                                   algorithm = "gam", control = gam.control(trace = TRUE), 
-                                   method = method, bs.yindex = bs_y_famm, 
+      famm_setup_get_scale <- pffr(pred, yind = my_grid, data = data, ydata = ydata,
+                                   algorithm = "gam", control = gam.control(trace = TRUE),
+                                   method = method, bs.yindex = bs_y_famm,
                                    bs.int = bs_int_famm, fit = FALSE)
-    } 
-    
+    }
+
     #################
     # extract S.scale
     #################
     if(N_B > 0){
-      scale_B <- famm_setup_get_scale$smooth[[2]]$S.scale    
+      scale_B <- famm_setup_get_scale$smooth[[2]]$S.scale
       if(N_C > 0){
-        scale_C <- famm_setup_get_scale$smooth[[3]]$S.scale    
+        scale_C <- famm_setup_get_scale$smooth[[3]]$S.scale
         if(N_E > 0){
-          scale_E <- famm_setup_get_scale$smooth[[4]]$S.scale    
+          scale_E <- famm_setup_get_scale$smooth[[4]]$S.scale
           scale_res <- c(scale_B, scale_C, scale_E)
         }else{
           scale_res <- c(scale_B, scale_C)
         }
       }else{
         if(N_E > 0){
-          scale_E <- famm_setup_get_scale$smooth[[3]]$S.scale    
+          scale_E <- famm_setup_get_scale$smooth[[3]]$S.scale
           scale_res <- c(scale_B, scale_E)
         }else{
           scale_res <- c(scale_B)
         }
-      }  
+      }
     }else{
       if(N_C > 0){
-        scale_C <- famm_setup_get_scale$smooth[[2]]$S.scale  
+        scale_C <- famm_setup_get_scale$smooth[[2]]$S.scale
         if(N_E > 0){
-          scale_E <- famm_setup_get_scale$smooth[[3]]$S.scale  
+          scale_E <- famm_setup_get_scale$smooth[[3]]$S.scale
           scale_res <- c(scale_C, scale_E)
         }else{
           scale_res <- c(scale_C)
         }
       }else{
         if(N_E > 0){
-          scale_E <- famm_setup_get_scale$smooth[[2]]$S.scale  
-          scale_res <- c(scale_E)  
+          scale_E <- famm_setup_get_scale$smooth[[2]]$S.scale
+          scale_res <- c(scale_E)
         }else{
           scale_res <- NULL
           warning("no FPCs chosen at all")
         }
       }
     }
-    
+
     #################
     # specify sp_fix
     #################
+    if (sigmasq == 0) {
+      sp_refit <- TRUE
+      message("The smoothing parameter of the fRIs are reestimated in the FAMM.")
+    }
     if(covariate){
       num_smooth <- sum(covariate_form == "smooth") # add -1 for smooth effects
-      sp_fix <- c(-1, scale_res * sigmasq, rep(-1, (length(listofbys_cov) + num_smooth)))  
+      if (sp_refit) {
+        sp_fix <- rep(-1, 1 + length(scale_res) + length(listofbys_cov) +
+                        num_smooth)
+      } else {
+        sp_fix <- c(-1, scale_res * sigmasq,
+                    rep(-1, (length(listofbys_cov) + num_smooth)))
+      }
+
     }else{
-      sp_fix <- c(-1, scale_res * sigmasq)  
+      if (sp_refit) {
+        sp_fix <- rep(-1, 1 + length(scale_res))
+      } else {
+        sp_fix <- c(-1, scale_res * sigmasq)
+      }
     }
-    
+
     ##############
     # set cluster
     # if specified
@@ -218,43 +233,43 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
     }else{
       cl_estim <- NULL
     }
-    
-    
+
+
     ###############
     # estimate famm
     ###############
     if(use_bam_famm){
       if(use_discrete){
-        famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata, 
-                           algorithm = "bam", control = gam.control(trace = TRUE), method = method, 
+        famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata,
+                           algorithm = "bam", control = gam.control(trace = TRUE), method = method,
                            bs.yindex = bs_y_famm, bs.int = bs_int_famm, discrete = TRUE, nthreads = para_estim_famm_nc)
       }else{
-        famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata, 
-                           algorithm = "bam", control = gam.control(trace = TRUE), method = method, 
-                           bs.yindex = bs_y_famm, bs.int = bs_int_famm, cluster = cl_estim)  
+        famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata,
+                           algorithm = "bam", control = gam.control(trace = TRUE), method = method,
+                           bs.yindex = bs_y_famm, bs.int = bs_int_famm, cluster = cl_estim)
       }
-      
-      
+
+
     }else{
-      famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata, 
-                         algorithm = "gam", control = gam.control(trace = TRUE), method = method, 
+      famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata,
+                         algorithm = "gam", control = gam.control(trace = TRUE), method = method,
                          bs.yindex = bs_y_famm, bs.int = bs_int_famm)
     }
-    
-    
+
+
     ##########################
     # stop cluster if existing
     ##########################
-    if(!is.null(cl_estim)) stopCluster(cl_estim) 
-    
+    if(!is.null(cl_estim)) stopCluster(cl_estim)
+
     results[["intercept"]] <- famm_estim$coefficients[1]
     results[["sigmasq"]] <- famm_estim$sig2
-    
+
     ###############
     # get residuals
     ###############
     results[["residuals"]] <- famm_estim$residuals
-    
+
     #####################
     # predict in parts
     # to avoid many
@@ -264,12 +279,12 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       pred1 <- coef(famm_estim, n2 = length(my_grid))$smterms[[2]]$coef
       pred1_sorted <- cbind(pred1[order(pred1$id_subject.vec), c("id_subject.vec", "value")],
                             use = rep(1:length(my_grid), times = length(unique(curve_info$subject_long))))
-      
-      pred1_sorted_reshaped <- as.matrix(subset(reshape(pred1_sorted, idvar = "id_subject.vec", direction = "wide", 
-                                                        timevar = "use", times = "value", v.names = "value"), 
+
+      pred1_sorted_reshaped <- as.matrix(subset(reshape(pred1_sorted, idvar = "id_subject.vec", direction = "wide",
+                                                        timevar = "use", times = "value", v.names = "value"),
                                                 select = - c(id_subject.vec)),
                                          nrow = length(unique(curve_info$subject_long)), ncol = length(my_grid))
-      
+
       dimnames(pred1_sorted_reshaped)[[1]] <- unique(curve_info$subject_long_orig)
       dimnames(pred1_sorted_reshaped)[[2]] <- NULL
       results[["famm_predict_B"]] <- pred1_sorted_reshaped
@@ -284,15 +299,15 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       }
       pred2_sorted <- cbind(pred2[order(pred2$id_word.vec), c("id_word.vec", "value")],
                             use = rep(1:length(my_grid), times = length(unique(curve_info$word_long))))
-      
-      pred2_sorted_reshaped <- as.matrix(subset(reshape(pred2_sorted, idvar = "id_word.vec", direction = "wide", 
-                                                        timevar = "use", times = "value", v.names = "value"), 
+
+      pred2_sorted_reshaped <- as.matrix(subset(reshape(pred2_sorted, idvar = "id_word.vec", direction = "wide",
+                                                        timevar = "use", times = "value", v.names = "value"),
                                                 select = - c(id_word.vec)),
                                          nrow = length(unique(curve_info$word_long)), ncol = length(my_grid))
-      
+
       dimnames(pred2_sorted_reshaped)[[1]] <- unique(curve_info$word_long_orig)
       dimnames(pred2_sorted_reshaped)[[2]] <- NULL
-      
+
       results[["famm_predict_C"]] <- pred2_sorted_reshaped
     }else{
       results[["famm_predict_C"]] <- NA
@@ -309,41 +324,41 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       }
       pred3_sorted <- cbind(pred3[order(pred3$id_n.vec), c("id_n.vec", "value")],
                             use = rep(1:length(my_grid), times = length(unique(curve_info$n_long))))
-      
-      pred3_sorted_reshaped <- as.matrix(subset(reshape(pred3_sorted, idvar = "id_n.vec", direction = "wide", 
-                                                        timevar = "use", times = "value", v.names = "value"), 
+
+      pred3_sorted_reshaped <- as.matrix(subset(reshape(pred3_sorted, idvar = "id_n.vec", direction = "wide",
+                                                        timevar = "use", times = "value", v.names = "value"),
                                                 select = - c(id_n.vec)),
                                          nrow = length(unique(curve_info$n_long)), ncol = length(my_grid))
-      
+
       dimnames(pred3_sorted_reshaped)[[1]] <- unique(curve_info$n_long_orig)
       dimnames(pred3_sorted_reshaped)[[2]] <- NULL
-      
+
       results[["famm_predict_E"]] <- pred3_sorted_reshaped
-      
+
     }else{
       results[["famm_predict_E"]] <- NA
     }
-    
+
     ##################
     # get covariate
     # effects and
     # confidence bands
     ##################
-    coef_use <- coef(famm_estim, n1 = length(my_grid), n2 = length(my_grid))  
+    coef_use <- coef(famm_estim, n1 = length(my_grid), n2 = length(my_grid))
     if(any(covariate_form == "smooth")){
-      newdata_smooth_mean <- data.table(id_subject = rep(1, length = length(my_grid)), 
-                                        id_word = rep(1, length = length(my_grid)), 
+      newdata_smooth_mean <- data.table(id_subject = rep(1, length = length(my_grid)),
+                                        id_word = rep(1, length = length(my_grid)),
                                         id_n = rep(1, length = length(my_grid)))
       if(covariate){
         for(i in 1:num_covariates){
           if(covariate_form[i] == "by"){
             mean_use <- mean(curve_info[!duplicated(n_long), ][[paste0("covariate.", i)]])
-            newdata_smooth_mean[, paste0("covariate.", i) := rep(mean_use, length(my_grid))]    
+            newdata_smooth_mean[, paste0("covariate.", i) := rep(mean_use, length(my_grid))]
           }else{
             mean_use <- mean(curve_info[!duplicated(n_long), ][[paste0("covariate.", i)]])
-            newdata_smooth_mean[, paste0("covariate.", i) := rep(mean_use, length(my_grid))]  
+            newdata_smooth_mean[, paste0("covariate.", i) := rep(mean_use, length(my_grid))]
           }
-          
+
           if(interaction){
             for(k in 1:num_covariates){
               if(which_interaction[i, k] & (i < k)){
@@ -354,18 +369,18 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
                   warning("interaction effects are only implemented between dummy covariates")
                 }
               }
-            }  
-          } 
+            }
+          }
         }
       }
-      
+
       pred_smooth_mean <- predict(famm_estim, type = "iterms", newdata = newdata_smooth_mean)
       results[["pred_smooth_mean"]] <- pred_smooth_mean
     }
-    
+
     coef_use_sm <- coef_use$smterms
     results[["famm_cb_mean"]] <- coef_use_sm[[1]]$coef
-    
+
     if(covariate){
       for(i in 1:num_covariates){
         if(covariate_form[i] == "by"){
@@ -388,7 +403,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
         }
       }
     }
-    
+
     ###################################################
     # get original basis weights of FPC-FAMM estimation
     ###################################################
@@ -404,7 +419,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       xi_B_hat_famm <- NA
     }
     results[["xi_B_hat_famm"]] <- xi_B_hat_famm
-    
+
     #######
     # for C
     if(N_C > 0){
@@ -417,7 +432,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       xi_C_hat_famm <- NA
     }
     results[["xi_C_hat_famm"]] <- xi_C_hat_famm
-    
+
     #######
     # for E
     if(N_E > 0){
@@ -430,8 +445,8 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
       xi_E_hat_famm <- NA
     }
     results[["xi_E_hat_famm"]] <- xi_E_hat_famm
-    
-    
+
+
     ##################
     # save famm object
     # if specified
@@ -443,7 +458,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
   }else{
     warning(" no FPCs chosen at all")
   }
-  
+
   ###############
   # return output
   ###############

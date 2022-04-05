@@ -1,3 +1,7 @@
+Changes in sparseFLMM v0.4.2.tar.gz (Update date: 2022-04-05)
+* add option to re-estimate the smoothing parameter of fRIs in the FAMM refit
+* force re-estimate of smoothing parameter of fRIs when estimated variance=0
+
 Changes in sparseFLMM v0.4.1.tar.gz 
 * fix bug in computation of FPCs using FAMM approach when N_B is zero
 
