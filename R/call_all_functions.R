@@ -204,6 +204,14 @@
 #' @param nested \code{TRUE} to specify a model with nested functional random
 #' intercepts for the first and second grouping variable and a smooth error
 #' curve. Defaults to \code{FALSE}.
+#' @param knots List specifying knot placements in the preliminary mean,
+#' the covariance estimation, and the FAMM fit. Defaults to NULL, which is
+#' recommended (p-splines on equidistant knots). If it is supplied, pay
+#' attention to the correct specifications in the arguments \code{bs},
+#' \code{bs_int_famm}, \code{bs_y_famm}. The number of knots is closely
+#' related to arguments \code{bs}, \code{bf_mean}, \code{bf_covariates},
+#' \code{m_mean}, \code{bf_covs}, \code{m_covs}. This argument is not
+#' checked so make sure you know what you are doing.
 #'
 #' @details The four special cases of the general FLMM (two nested fRIs, two
 #' crossed fRIs, one fRI, independent curves) are implemented as follows:
@@ -295,7 +303,7 @@
 #' }
 #'}
 #'
-#' @author Jona Cederbaum
+#' @author Jona Cederbaum, Alexander Volkmann
 #'
 #' @seealso Note that \code{\link{sparseFLMM}} calls \code{\link[mgcv]{bam}} or \code{\link[mgcv]{gam}} directly.
 #' @seealso For functional linear mixed models with complex correlation structures
@@ -391,7 +399,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                bs_y_famm = list(bs = "ps", k = 8, m = c(2, 3)),
                                save_model_famm = FALSE, use_discrete_famm = FALSE,
                                para_estim_famm = FALSE, para_estim_famm_nc = 0,
-                               nested = FALSE){
+                               nested = FALSE, knots = NULL){
 
   ##############################################################################
   # preparations
@@ -412,7 +420,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
     stop("curve_info needs to be a data.table, see ?data.table")
 
   if(bs != "ps")
-    stop("so far only P-splines are allowed")
+    warning("so far only P-splines have been tested")
 
   if(is.na(var_level) & (is.na(N_B) | is.na(N_E)))
     stop("either var_level or N_B, N_C, and N_E have to be specified")
@@ -655,7 +663,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                          save_model_mean = save_model_mean, n = n, my_grid = res[["my_grid"]], bs = bs,
                                          m = m_mean, curve_info = curve_info, interaction = interaction,
                                          which_interaction = which_interaction, use_bam = use_bam,
-                                         para_estim = para_estim_mean, para_estim_nc = para_estim_mean_nc)
+                                         para_estim = para_estim_mean, para_estim_nc = para_estim_mean_nc,
+                                         knot = knots)
 
   ########################################
   # preparations for covariance estimation
@@ -744,7 +753,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                            same_point_grid = same_point_grid,
                                            mp = mp, para_estim = para_estim_cov, para_estim_nc = para_estim_cov_nc,
                                            use_RI = use_RI, weights = NULL, use_simple = use_simple, np = np,
-                                           use_discrete = use_discrete_cov))
+                                           use_discrete = use_discrete_cov,
+                                           knot = knots))
     }
 
     #################################
@@ -974,7 +984,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 covariate = covariate, para_estim_famm = para_estim_famm,
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
-                                                use_discrete = use_discrete_famm))
+                                                use_discrete = use_discrete_famm,
+                                                knot = knots))
         }else{
           res[["fpc_famm_hat_whole"]]<-NA
         }
@@ -1008,7 +1019,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 covariate = covariate, para_estim_famm = para_estim_famm,
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
-                                                use_discrete = use_discrete_famm))
+                                                use_discrete = use_discrete_famm,
+                                                knot = knots))
         }else{
           res[["fpc_famm_hat_tri"]]<-NA
         }
@@ -1042,7 +1054,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 covariate = covariate, para_estim_famm = para_estim_famm,
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
-                                                use_discrete = use_discrete_famm))
+                                                use_discrete = use_discrete_famm,
+                                                knot = knots))
         }else{
           res[["fpc_famm_hat_tri_constr"]]<-NA
         }
@@ -1076,7 +1089,8 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 covariate = covariate, para_estim_famm = para_estim_famm,
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
-                                                use_discrete = use_discrete_famm))
+                                                use_discrete = use_discrete_famm,
+                                                knot = knots))
         }else{
           res[["fpc_famm_hat_tri_constr_weights"]]<-NA
         }
