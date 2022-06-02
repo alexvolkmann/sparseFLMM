@@ -9,7 +9,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
                                   num_covariates, interaction, which_interaction, n, use_RI,
                                   method, bs_y_famm, bs_int_famm, sigmasq, covariate, para_estim_famm,
                                   para_estim_famm_nc, covariate_form, save_model_famm,
-                                  use_discrete, knot){
+                                  use_discrete, knot, sp_refit){
 
   ###################
   # initialize output
@@ -129,6 +129,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
     kn <- if(is.null(knot[[3]])) NULL else {
       list(yindex.vec = knot[[3]])
     }
+
     ####################################
     # get design matrices to get S.scale
     ####################################
@@ -198,11 +199,26 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
     #################
     # specify sp_fix
     #################
+    if (sigmasq == 0) {
+      sp_refit <- TRUE
+      message("The smoothing parameter of the fRIs are reestimated in the FAMM.")
+    }
     if(covariate){
       num_smooth <- sum(covariate_form == "smooth") # add -1 for smooth effects
-      sp_fix <- c(-1, scale_res * sigmasq, rep(-1, (length(listofbys_cov) + num_smooth)))
+      if (sp_refit) {
+        sp_fix <- rep(-1, 1 + length(scale_res) + length(listofbys_cov) +
+                        num_smooth)
+      } else {
+        sp_fix <- c(-1, scale_res * sigmasq,
+                    rep(-1, (length(listofbys_cov) + num_smooth)))
+      }
+
     }else{
-      sp_fix <- c(-1, scale_res * sigmasq)
+      if (sp_refit) {
+        sp_fix <- rep(-1, 1 + length(scale_res))
+      } else {
+        sp_fix <- c(-1, scale_res * sigmasq)
+      }
     }
 
     ##############
@@ -240,7 +256,6 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
                            bs.yindex = bs_y_famm, bs.int = bs_int_famm, cluster = cl_estim,
                            knots = kn)
       }
-
 
     }else{
       famm_estim <- pffr(pred, sp = sp_fix, yind = my_grid, data = data, ydata = ydata,
@@ -313,7 +328,7 @@ estimate_fpc_famm_fun <- function(curve_info, my_grid, phi_B_hat_grid, phi_C_hat
           pred3 <- coef(famm_estim, n2 = length(my_grid))$smterms[[3]]$coef
         }
       }else{
-        pred3 <- coef(famm_estim, n2 = length(my_grid))$smterms[[2]]$coef
+        pred3 <- coef(famm_estim, n2 = length(my_grid))$smterms[[3]]$coef
       }
       pred3_sorted <- cbind(pred3[order(pred3$id_n.vec), c("id_n.vec", "value")],
                             use = rep(1:length(my_grid), times = length(unique(curve_info$n_long))))

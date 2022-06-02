@@ -212,6 +212,11 @@
 #' related to arguments \code{bs}, \code{bf_mean}, \code{bf_covariates},
 #' \code{m_mean}, \code{bf_covs}, \code{m_covs}. This argument is not
 #' checked so make sure you know what you are doing.
+#' @param sp_refit \code{TRUE} to estimate the smoothing parameters for the
+#' random processes in the FAMM refit. Defaults to \code{FALSE} as the variances
+#'  of the random weights have already been estimated. When the estimation of
+#'  the auto-covariances yields a negative estimate of \eqn{\sigma^2}, the
+#'  smoothing parameters are automatically re-estimated.
 #'
 #' @details The four special cases of the general FLMM (two nested fRIs, two
 #' crossed fRIs, one fRI, independent curves) are implemented as follows:
@@ -399,7 +404,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                bs_y_famm = list(bs = "ps", k = 8, m = c(2, 3)),
                                save_model_famm = FALSE, use_discrete_famm = FALSE,
                                para_estim_famm = FALSE, para_estim_famm_nc = 0,
-                               nested = FALSE, knots = NULL){
+                               nested = FALSE, knots = NULL, sp_refit = FALSE){
 
   ##############################################################################
   # preparations
@@ -985,7 +990,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
                                                 use_discrete = use_discrete_famm,
-                                                knot = knots))
+                                                knot = knots, sp_refit = sp_refit))
         }else{
           res[["fpc_famm_hat_whole"]]<-NA
         }
@@ -1020,7 +1025,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
                                                 use_discrete = use_discrete_famm,
-                                                knot = knots))
+                                                knot = knots, sp_refit = sp_refit))
         }else{
           res[["fpc_famm_hat_tri"]]<-NA
         }
@@ -1055,7 +1060,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
                                                 use_discrete = use_discrete_famm,
-                                                knot = knots))
+                                                knot = knots, sp_refit = sp_refit))
         }else{
           res[["fpc_famm_hat_tri_constr"]]<-NA
         }
@@ -1090,7 +1095,7 @@ sparseFLMM <- function(curve_info, use_RI = FALSE, use_simple = FALSE, method = 
                                                 para_estim_famm_nc = para_estim_famm_nc, covariate_form = covariate_form,
                                                 save_model_famm = save_model_famm,
                                                 use_discrete = use_discrete_famm,
-                                                knot = knots))
+                                                knot = knots, sp_refit = sp_refit))
         }else{
           res[["fpc_famm_hat_tri_constr_weights"]]<-NA
         }
